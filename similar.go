@@ -12,18 +12,24 @@ type Similar struct {
 
 // NewSimilar instances
 func NewSimilar(memorySize int) *Similar {
-	return &Similar{NewSimilarWordDict(), NewSentenceList(memorySize), &jiebago.Segmenter{}}
+	seg := &jiebago.Segmenter{}
+	seg.LoadDictionary("dict.txt")
+	return &Similar{NewSimilarWordDict(), NewSentenceList(memorySize), seg}
 }
 
 // Compare sentence in memory, return the distence
-func (s *Similar) Compare(sentence string) float64 {
+func (s *Similar) Compare(sentence string) (rt float64) {
 	setVec := SentenceVector{}
 	for word := range s.seg.CutAll(sentence) {
 		code := s.dict.GetCode(word) // get/create code to dict
 		setVec = append(setVec, code)
 	}
 
-	return s.memory.FindClosestDistance(func(sv SentenceVector) float64 {
+	rt = s.memory.FindClosestDistance(func(sv SentenceVector) float64 {
 		return sv.CosDistance(setVec)
 	})
+
+	s.memory.Add(setVec)
+
+	return
 }

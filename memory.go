@@ -74,7 +74,7 @@ func (list *FIFOSentenceList) FindClosestDistance(calculator func(SentenceVector
 	for _, vec := range list.storage {
 		if vec != nil {
 			currentValue := calculator(vec)
-			if currentValue < closestValue {
+			if currentValue < closestValue || closestValue == 0 {
 				closestValue = currentValue
 				rt = closestValue
 			}
