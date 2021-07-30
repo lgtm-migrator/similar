@@ -29,4 +29,14 @@ func TestSimilar(t *testing.T) {
 		0.22188007849009164,
 		similar.Compare("编写高质量可维护的代码：组件的抽象与粒度"),
 	)
+
+	assert.EqualValues(
+		0,
+		similar.Compare("Hello World"),
+	)
+
+	assert.EqualValues(
+		0.5,
+		similar.Compare("Hello CPP"),
+	)
 }
