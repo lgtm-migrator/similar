@@ -18,17 +18,19 @@ func (sentence *SentenceVector) ToWordFreqVector(dictSize int) []int64 {
 	return rt
 }
 
-func (sentence *SentenceVector) CosDistance(sv SentenceVector) float64 {
+func CosDistance(sv SentenceVector, anothersv SentenceVector, dictSize int) float64 {
+	wordFreq1 := sv.ToWordFreqVector(dictSize)
+	wordFreq2 := anothersv.ToWordFreqVector(dictSize)
 	topSum := int64(0)
-	for idx, value := range *sentence {
-		topSum += (value * sv[idx])
+	for idx, value := range wordFreq1 {
+		topSum += (value * wordFreq2[idx])
 	}
 	bottomLeftSum := int64(0)
-	for _, value := range *sentence {
+	for _, value := range wordFreq1 {
 		bottomLeftSum += int64(math.Pow(float64(value), 2))
 	}
 	bottomRightSum := int64(0)
-	for _, value := range sv {
+	for _, value := range wordFreq2 {
 		bottomRightSum += int64(math.Pow(float64(value), 2))
 	}
 	return (float64(topSum) / (math.Sqrt(float64(bottomLeftSum) * float64(bottomRightSum))))

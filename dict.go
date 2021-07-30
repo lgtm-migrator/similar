@@ -22,5 +22,5 @@ func (dict *SimilarWordDict) GetCode(word string) int64 {
 }
 
 func (dict *SimilarWordDict) GetMaxIndex() int64 {
-	return (dict.dictIdx - 1)
+	return dict.dictIdx
 }

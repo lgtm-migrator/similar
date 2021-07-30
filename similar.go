@@ -26,7 +26,7 @@ func (s *Similar) Compare(sentence string) (rt float64) {
 	}
 
 	rt = s.memory.FindClosestDistance(func(sv SentenceVector) float64 {
-		return sv.CosDistance(setVec)
+		return CosDistance(sv, setVec, int(s.dict.GetMaxIndex()))
 	})
 
 	s.memory.Add(setVec)
