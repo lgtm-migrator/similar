@@ -36,4 +36,5 @@ ast/**/output.json
 
 # tmp file
 similar_dict.csv
+sentences_vec.csv
 tmp/*.csv
