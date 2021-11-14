@@ -33,3 +33,7 @@ main/output
 # ast tests
 
 ast/**/output.json
+
+# tmp file
+similar_dict.csv
+tmp/*.csv
