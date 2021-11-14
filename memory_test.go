@@ -22,7 +22,7 @@ func TestNewSentenceList(t *testing.T) {
 	assert.Nil(list.storage[4])
 	assert.EqualValues(5, len(list.storage))
 	list.Add(SentenceVector{0, 0, 5})
-	assert.EqualValues(11, len(list.storage))
+	assert.EqualValues(16, len(list.storage))
 	assert.EqualValues(5, (*list.storage[4])[2])
 
 	list.Add(SentenceVector{0, 0, 6})

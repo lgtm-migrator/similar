@@ -15,28 +15,39 @@ var similarDictHeader = []string{"word", "index"}
 
 // SimilarWordDict allocate index number to word
 type SimilarWordDict struct {
-	dict    map[string]int64
-	dictIdx int64
-	lock    *sync.Mutex
+	dict        map[string]int64
+	inverseDict map[int64]string
+	dictIdx     int64
+	lock        *sync.Mutex
 }
 
 func NewSimilarWordDict() *SimilarWordDict {
 	return &SimilarWordDict{
 		map[string]int64{},
+		map[int64]string{},
 		0,
 		&sync.Mutex{},
 	}
 }
 
-// GetCode of word
+// GetCode get the index of word
 func (dict *SimilarWordDict) GetCode(word string) int64 {
 	dict.lock.Lock()
 	defer dict.lock.Unlock()
 	if _, exist := dict.dict[word]; !exist {
 		dict.dict[word] = dict.dictIdx
+		dict.inverseDict[dict.dictIdx] = word
 		dict.dictIdx++
 	}
 	return dict.dict[word]
+}
+
+// GetWord get the word of index
+func (dict *SimilarWordDict) GetWord(index int64) *string {
+	if value, exist := dict.inverseDict[index]; exist {
+		return &value
+	}
+	return nil
 }
 
 func (dict *SimilarWordDict) GetMaxIndex() int64 {

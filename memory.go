@@ -160,14 +160,30 @@ func (list *SentenceListStore) Find(predictor func(SentenceVector) bool) Sentenc
 	return nil
 }
 
-func (list *SentenceListStore) FindClosestDistance(calculator func(SentenceVector) float64) (rt float64) {
+func (list *SentenceListStore) FindAll(calculator func(SentenceVector) (bool, float64)) map[*SentenceVector]float64 {
+	rs := map[*SentenceVector]float64{}
+	for _, vec := range list.storage {
+		if vec != nil {
+			if put, similarity := calculator(*vec); put {
+				rs[vec] = similarity
+			}
+		}
+	}
+	return rs
+}
+
+func (list *SentenceListStore) FindClosestDistance(calculator func(SentenceVector) float64) (
+	sVec *SentenceVector,
+	similarity float64,
+) {
 	closestValue := float64(0)
 	for _, vec := range list.storage {
 		if vec != nil {
 			currentValue := calculator(*vec)
 			if currentValue < closestValue || closestValue == 0 {
 				closestValue = currentValue
-				rt = closestValue
+				sVec = vec
+				similarity = closestValue
 			}
 		}
 	}
