@@ -21,6 +21,8 @@ func TestNewSimilarWordDict(t *testing.T) {
 
 	assert.Nil(dict.Save(nil))
 
+	assert.Nil(os.Remove(similarDictFileDefaultName))
+
 }
 
 func TestLoadAndRestoreDict(t *testing.T) {

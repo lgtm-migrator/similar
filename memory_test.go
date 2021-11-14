@@ -1,6 +1,7 @@
 package similar
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,6 +53,8 @@ func TestStoreSaveLoad(t *testing.T) {
 	anotherList := NewSentenceList(1000)
 	assert.Nil(anotherList.Load(nil))
 	assert.EqualValues(&SentenceVector{0, 0, 999}, anotherList.storage[999])
+
+	assert.Nil(os.Remove(sentenceStoreDefaultName))
 }
 
 func TestSentenceVector_ToWordFreqVector(t *testing.T) {
