@@ -43,10 +43,9 @@ func main() {
 			})
 			return
 		}
-		// TODO add plain text here
 		c.JSON(http.StatusOK, gin.H{
 			"message": "executed",
-			"results": sim.FindSimilar(payload.Sentence, payload.Threshold),
+			"results": ToFindResults(sim.FindSimilar(payload.Sentence, payload.Threshold)),
 		})
 	})
 
@@ -58,12 +57,13 @@ func main() {
 			})
 			return
 		}
-		// TODO add plain text here
+		r := ToFindResult(sim.FindMostSimilar(payload.Sentence))
 		c.JSON(http.StatusOK, gin.H{
 			"message": "executed",
-			"results": sim.FindMostSimilar(payload.Sentence),
+			"results": r,
 		})
 	})
 
 	r.Run()
+
 }
