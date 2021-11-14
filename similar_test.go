@@ -17,21 +17,21 @@ func TestSimilar(t *testing.T) {
 
 	r := similar.FindMostSimilar(text100)
 
-	assert.Nil(r.vec)
-	assert.EqualValues(0, r.similarity)
+	assert.Nil(r.Vec)
+	assert.EqualValues(0, r.Similarity)
 
 	similar.Remember(text100)
 
 	r = similar.FindMostSimilar(text100)
-	assert.NotNil(r.vec)
-	assert.EqualValues(1, r.similarity)
+	assert.NotNil(r.Vec)
+	assert.EqualValues(1, r.Similarity)
 
 	r = similar.FindMostSimilar(text101)
 	assert.NotNil(r.GetVector())
 	assert.EqualValues(0.9759000729485332, r.GetSimilarity())
 	assert.EqualValues(
 		text102,
-		VecToSentence(*r.vec, similar.dict),
+		VecToSentence(*r.Vec, similar.dict),
 	)
 	assert.EqualValues(
 		text102,

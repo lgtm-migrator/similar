@@ -1,19 +1,19 @@
 package similar
 
 type FindResult struct {
-	vec        *SentenceVector
-	similarity float64
+	Vec        *SentenceVector
+	Similarity float64
 	dict       *SimilarWordDict
 }
 
 func (r *FindResult) ToOriginalSentence() string {
-	return VecToSentence(*r.vec, r.dict)
+	return VecToSentence(*r.Vec, r.dict)
 }
 
 func (r *FindResult) GetVector() *SentenceVector {
-	return r.vec
+	return r.Vec
 }
 
 func (r *FindResult) GetSimilarity() float64 {
-	return r.similarity
+	return r.Similarity
 }
