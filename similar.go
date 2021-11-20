@@ -4,6 +4,7 @@ import (
 	"math"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/wangbin/jiebago"
 )
 
@@ -12,6 +13,8 @@ type Similar struct {
 	memory *SentenceListStore
 	seg    *jiebago.Segmenter
 }
+
+var SIMILAR_LOGGER = log.WithField("module", "simiar")
 
 func CosDistance(sv SentenceVector, anothersv SentenceVector, dictSize int) float64 {
 	wordFreq1 := sv.ToWordFreqVector(dictSize)
@@ -54,7 +57,11 @@ func VecToSentence(vec SentenceVector, dict *SimilarWordDict) string {
 func NewSimilar(memorySize int) *Similar {
 	seg := &jiebago.Segmenter{}
 	seg.LoadDictionary("dict.txt")
-	return &Similar{NewSimilarWordDict(), NewSentenceList(memorySize), seg}
+	store, err := NewStore(&StoreConfig{})
+	if err != nil {
+		SIMILAR_LOGGER.Fatal("store init failed: ", err)
+	}
+	return &Similar{NewSimilarWordDict(&StoreConfig{}), store, seg}
 }
 
 // Remember a sentence text

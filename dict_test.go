@@ -12,34 +12,38 @@ import (
 func TestNewSimilarWordDict(t *testing.T) {
 
 	assert := assert.New(t)
-	dict := NewSimilarWordDict()
+	dict := NewSimilarWordDict(&StoreConfig{Persistence: true})
 
 	assert.EqualValues(0, dict.GetCode("hello"))
 	assert.EqualValues(1, dict.GetCode("word"))
 	assert.EqualValues(1, dict.GetCode("word"))
 	assert.EqualValues(2, dict.GetCode("✅"))
 
-	assert.Nil(dict.Save(nil))
+	assert.Nil(dict.Close())
 
-	assert.Nil(os.Remove(similarDictFileDefaultName))
+	_, err := os.Stat(DICT_DEFAULT_FILE_NAME)
+
+	assert.Nil(err)
+
+	assert.Nil(os.Remove(DICT_DEFAULT_FILE_NAME))
 
 }
 
 func TestLoadAndRestoreDict(t *testing.T) {
 
 	assert := assert.New(t)
-	dict := NewSimilarWordDict()
+	tmpFile := path.Join(os.TempDir(), uuid.NewString()+".csv") // tmpFile
+	dict := NewSimilarWordDict(&StoreConfig{Persistence: true, PersistencePath: tmpFile})
 
 	assert.EqualValues(0, dict.GetCode("hello"))
 	assert.EqualValues(1, dict.GetCode("word"))
 	assert.EqualValues(1, dict.GetCode("word"))
 	assert.EqualValues(2, dict.GetCode("✅"))
 
-	tmpFile := path.Join(os.TempDir(), uuid.NewString()+".csv") // tmpFile
-	assert.Nil(dict.Save(&tmpFile))
+	assert.Nil(dict.Close())
+	defer os.Remove(tmpFile)
 
-	anotherDict := NewSimilarWordDict()
-	assert.Nil(anotherDict.Load(&tmpFile))
+	anotherDict := NewSimilarWordDict(&StoreConfig{Persistence: true, PersistencePath: tmpFile})
 
 	assert.EqualValues(2, anotherDict.GetCode("✅"))
 	assert.EqualValues(1, anotherDict.GetCode("word"))

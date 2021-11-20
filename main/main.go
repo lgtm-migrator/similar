@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Soontao/similar"
@@ -64,6 +65,10 @@ func main() {
 		})
 	})
 
-	r.Run()
+	err := r.Run()
+
+	if err != nil {
+		log.Println(err)
+	}
 
 }

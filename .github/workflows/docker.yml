@@ -56,10 +56,6 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
-          build-args: |
-            - "VERSION=${{ steps.semver-version.outputs.fullversion }}"
-            - "APPNAME=${{ steps.appname.outputs.prop }} "
-            - "APPDESCRIPTION=${{ steps.app-description.outputs.prop }} "
           tags: |
             ${{ secrets.DOCKERHUB_ORG }}/${{ secrets.DOCKERHUB_REPOSITORY }}:latest
             ${{ secrets.DOCKERHUB_ORG }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ steps.semver-version.outputs.major }}

@@ -8,9 +8,11 @@ import (
 )
 
 func TestNewSentenceList(t *testing.T) {
+
 	assert := assert.New(t)
 
-	list := NewSentenceList(5)
+	list, err := NewStore(&StoreConfig{InitialSize: 5})
+	assert.Nil(err)
 	assert.EqualValues(5, len(list.storage))
 	list.Add(SentenceVector{0, 0, 1})
 	assert.EqualValues(1, (*list.storage[0])[2])
@@ -44,17 +46,20 @@ func TestNewSentenceList(t *testing.T) {
 
 func TestStoreSaveLoad(t *testing.T) {
 	assert := assert.New(t)
-	list := NewSentenceList(5)
+	list, err := NewStore(&StoreConfig{Persistence: true})
+	assert.Nil(err)
 	for i := 0; i < 1000; i++ {
 		list.Add(SentenceVector{0, 0, int64(i)})
 	}
-	assert.Nil(list.Save(nil))
+	assert.Nil(list.Close())
 
-	anotherList := NewSentenceList(1000)
-	assert.Nil(anotherList.Load(nil))
+	defer os.Remove(sentenceStoreDefaultName)
+
+	anotherList, err := NewStore(&StoreConfig{Persistence: true})
+	assert.Nil(err)
 	assert.EqualValues(&SentenceVector{0, 0, 999}, anotherList.storage[999])
+	anotherList.Close()
 
-	assert.Nil(os.Remove(sentenceStoreDefaultName))
 }
 
 func TestSentenceVector_ToWordFreqVector(t *testing.T) {

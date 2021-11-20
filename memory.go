@@ -3,7 +3,6 @@ package similar
 import (
 	"encoding/csv"
 	"fmt"
-	"io"
 	"os"
 	"reflect"
 	"sync"
@@ -11,17 +10,50 @@ import (
 
 // SentenceListStore cycle override
 type SentenceListStore struct {
-	storage []*SentenceVector
-	idx     int
-	lock    *sync.Mutex
+	storage       []*SentenceVector
+	idx           int
+	lock          *sync.Mutex
+	config        *StoreConfig
+	persistWriter *csv.Writer
+	persistFile   *os.File
+	persistence   *CSVPersistence
 }
 
-// NewSentenceList instance
-func NewSentenceList(initialSize int) *SentenceListStore {
-	if initialSize <= 0 {
-		initialSize = 1
+// NewStore instance
+func NewStore(c *StoreConfig) (s *SentenceListStore, err error) {
+
+	s = &SentenceListStore{
+		make([]*SentenceVector, c.GetInitialSize()),
+		0,
+		&sync.Mutex{},
+		c,
+		nil,
+		nil,
+		nil,
 	}
-	return &SentenceListStore{make([]*SentenceVector, initialSize), 0, &sync.Mutex{}}
+
+	if c.IsPersistence() {
+		STORE_LOGGER.Debug("init store with persistence")
+		s.persistence, err = NewCSVPersistence(
+			c.GetPersistencePath(sentenceStoreDefaultName),
+			sentenceStoreDefaultHeaders...,
+		)
+		if err != nil {
+			return nil, err
+		}
+		err = s.persistence.Restore(func(cells ...string) {
+			vec, err := NewSentenceVecFromBase64(cells[1])
+			if err != nil {
+				STORE_LOGGER.Error("load data item failed", cells, err)
+			}
+			s.memoryAdd(vec)
+		})
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 func (list *SentenceListStore) extendCapacity() {
@@ -35,114 +67,36 @@ func (list *SentenceListStore) extendCapacity() {
 func (list *SentenceListStore) Add(vec SentenceVector) {
 	list.lock.Lock()
 	defer list.lock.Unlock()
-	list.internalAdd(vec)
+	idx := list.memoryAdd(vec)
+	if list.config.IsPersistence() {
+		list.persistence.Append(fmt.Sprintf("%v", idx), vec.ToString())
+	}
 }
 
-func (list *SentenceListStore) internalAdd(vec SentenceVector) {
+func (list *SentenceListStore) memoryAdd(vec SentenceVector) (idx int) {
 	list.extendCapacity()
 	list.storage[list.idx] = &vec
+	idx = list.idx
 	list.idx++
+	return
 }
 
 var sentenceStoreDefaultName = "sentences_vec.csv"
 var sentenceStoreDefaultHeaders = []string{"index", "encoded_vec"}
 
-func (list *SentenceListStore) Save(path *string) error {
-	list.lock.Lock()
-	defer list.lock.Unlock()
-
-	if path == nil {
-		path = &sentenceStoreDefaultName
-	}
-
-	storageFile, err := os.OpenFile(
-		*path,
-		os.O_CREATE|os.O_WRONLY|os.O_TRUNC,
-		os.ModePerm,
-	)
-
-	if err != nil {
-		return nil
-	}
-
-	defer storageFile.Close()
-
-	writer := csv.NewWriter(storageFile)
-
-	if err = writer.Write(sentenceStoreDefaultHeaders); err != nil {
-		return nil
-	}
-
-	for index, vec := range list.storage {
-		if vec == nil {
-			break
-		}
-		writer.Write([]string{fmt.Sprintf("%v", index), vec.ToString()})
-	}
-
-	writer.Flush()
-
-	return nil
-}
-
-func (list *SentenceListStore) Load(path *string) (err error) {
-	list.lock.Lock()
-	defer list.lock.Unlock()
-
-	if path == nil {
-		path = &sentenceStoreDefaultName
-	}
-
-	storageFile, err := os.OpenFile(
-		*path,
-		os.O_RDONLY,
-		os.ModePerm,
-	)
-
-	if err != nil {
-		return
-	}
-
-	defer storageFile.Close()
-
-	reader := csv.NewReader(storageFile)
-	headers, err := reader.Read()
-
-	if err != nil {
-		if err == io.EOF {
-			return fmt.Errorf("no content in file: %v", storageFile.Name())
-		}
-		return
-	}
-
-	if !reflect.DeepEqual(headers, sentenceStoreDefaultHeaders) {
-		err = fmt.Errorf("the header of target file is not correct: %v, required: %v", headers, similarDictHeader)
-		return
-	}
-
-	for {
-		record, err := reader.Read()
-
-		if err != nil {
-			if err == io.EOF {
-				// file end
-				break
-			} else {
-				return err
+// Close storage, if persistence required, flush all data
+func (list *SentenceListStore) Close() (err error) {
+	STORE_LOGGER.Debug("closing...")
+	if list.config.IsPersistence() {
+		if list.persistence != nil {
+			STORE_LOGGER.Debug("flush persistence data")
+			err = list.persistence.Close()
+			if err != nil {
+				return
 			}
 		}
-
-		vec, err := NewSentenceVecFromBase64(record[1])
-
-		if err != nil {
-			return err
-		}
-
-		list.internalAdd(vec)
-
 	}
-
-	return nil
+	return
 }
 
 func (list *SentenceListStore) Exist(sentence SentenceVector) bool {
